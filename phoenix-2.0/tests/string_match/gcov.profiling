@@ -1,0 +1,31 @@
+Function 'main'
+Lines executed:0.00% of 25
+Branches executed:0.00% of 22
+Taken at least once:0.00% of 22
+Calls executed:0.00% of 30
+
+Function 'string_match'
+Lines executed:0.00% of 39
+Branches executed:0.00% of 12
+Taken at least once:0.00% of 12
+Calls executed:0.00% of 11
+
+Function 'compute_hashes'
+Lines executed:0.00% of 5
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+No calls
+
+Function 'getnextline'
+Lines executed:0.00% of 15
+Branches executed:0.00% of 10
+Taken at least once:0.00% of 10
+No calls
+
+File 'string_match-seq.c'
+Lines executed:0.00% of 84
+Branches executed:0.00% of 46
+Taken at least once:0.00% of 46
+Calls executed:0.00% of 41
+Creating 'string_match-seq.c.gcov'
+

@@ -1,0 +1,130 @@
+String Match: Running...
+Keys Size is 57557323
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS ferrari
+FOUND: WORD IS whotheman
+FOUND: WORD IS howareyou
+FOUND: WORD IS Helloworld
+FOUND: WORD IS ferrari
+String Match: Completed 11
+
+
+llvmInstrAtomicCounter: 3652012341
+basicBlockAtomicCounter: 454936402
+mulAtomicCounter: 0
+memOpAtomicCounter: 1575281754
+branchAtomicCounter: 443891533
+getnextline: 5522432
+compute_hashes: 5522435
+strlen: 0
+string_match: 1
+__assert_fail: 0
+malloc: 0
+llvm.memset.p0i8.i64: 0
+strcmp: 0
+fprintf: 0
+free: 0
+main: 1
+printf: 0
+exit: 0
+srand: 0
+time: 0
+open: 0
+perror: 0
+fstat: 0
+mmap: 0
+gettimeofday: 0
+munmap: 0
+close: 0
