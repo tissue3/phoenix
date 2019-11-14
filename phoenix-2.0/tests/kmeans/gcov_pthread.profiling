@@ -1,0 +1,55 @@
+Function 'main'
+Lines executed:96.97% of 66
+Branches executed:76.00% of 50
+Taken at least once:58.00% of 50
+Calls executed:48.48% of 33
+
+Function 'calc_means'
+Lines executed:100.00% of 17
+Branches executed:100.00% of 10
+Taken at least once:90.00% of 10
+Calls executed:100.00% of 1
+
+Function 'find_clusters'
+Lines executed:100.00% of 16
+Branches executed:100.00% of 8
+Taken at least once:100.00% of 8
+Calls executed:100.00% of 2
+
+Function 'add_to_sum'
+Lines executed:100.00% of 4
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+
+Function 'get_sq_dist'
+Lines executed:100.00% of 5
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+
+Function 'generate_points'
+Lines executed:100.00% of 5
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 1
+
+Function 'parse_args'
+Lines executed:40.00% of 30
+Branches executed:62.50% of 16
+Taken at least once:31.25% of 16
+Calls executed:55.56% of 9
+
+Function 'dump_points'
+Lines executed:100.00% of 6
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 2
+
+File 'kmeans-pthread.c'
+Lines executed:86.58% of 149
+Branches executed:81.25% of 96
+Taken at least once:65.63% of 96
+Calls executed:56.25% of 48
+Creating 'kmeans-pthread.c.gcov'
+

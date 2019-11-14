@@ -1,0 +1,519 @@
+        -:    0:Source:kmeans-pthread.c
+        -:    0:Graph:kmeans-pthread.gcno
+        -:    0:Data:kmeans-pthread.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/* Copyright (c) 2007-2009, Stanford University
+        -:    2:* All rights reserved.
+        -:    3:*
+        -:    4:* Redistribution and use in source and binary forms, with or without
+        -:    5:* modification, are permitted provided that the following conditions are met:
+        -:    6:*     * Redistributions of source code must retain the above copyright
+        -:    7:*       notice, this list of conditions and the following disclaimer.
+        -:    8:*     * Redistributions in binary form must reproduce the above copyright
+        -:    9:*       notice, this list of conditions and the following disclaimer in the
+        -:   10:*       documentation and/or other materials provided with the distribution.
+        -:   11:*     * Neither the name of Stanford University nor the names of its 
+        -:   12:*       contributors may be used to endorse or promote products derived from 
+        -:   13:*       this software without specific prior written permission.
+        -:   14:*
+        -:   15:* THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+        -:   16:* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        -:   17:* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        -:   18:* DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+        -:   19:* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        -:   20:* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        -:   21:* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        -:   22:* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        -:   23:* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        -:   24:* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -:   25:*/ 
+        -:   26:
+        -:   27:#include <stdio.h>
+        -:   28:#include <strings.h>
+        -:   29:#include <string.h>
+        -:   30:#include <stddef.h>
+        -:   31:#include <stdlib.h>
+        -:   32:#include <unistd.h>
+        -:   33:#include <assert.h>
+        -:   34:#include <string.h>
+        -:   35:#include <math.h>
+        -:   36:#include <pthread.h>
+        -:   37:
+        -:   38:#include "stddefines.h"
+        -:   39:#include "map_reduce.h"
+        -:   40:
+        -:   41:#define DEF_NUM_POINTS 1000
+        -:   42:#define DEF_NUM_MEANS 10
+        -:   43:#define DEF_DIM 3
+        -:   44:#define DEF_GRID_SIZE 100
+        -:   45:
+        -:   46:#define false 0
+        -:   47:#define true 1
+        -:   48:
+        -:   49:int num_points; // number of vectors
+        -:   50:int dim;       // Dimension of each vector
+        -:   51:int num_means; // number of clusters
+        -:   52:int grid_size; // size of each dimension of vector space
+        -:   53:int modified;
+        -:   54:int num_pts = 0;
+        -:   55:   
+        -:   56:int **points;
+        -:   57:int **means;
+        -:   58:int *clusters;
+        -:   59:
+        -:   60:typedef struct {
+        -:   61:   int start_idx;
+        -:   62:   int num_pts;
+        -:   63:   int *sum;
+        -:   64:} thread_arg;
+        -:   65:
+        -:   66:/** dump_points()
+        -:   67: *  Helper function to print out the points
+        -:   68: */
+function dump_points called 1 returned 100% blocks executed 100%
+        1:   69:void dump_points(int **vals, int rows)
+        -:   70:{
+        -:   71:   int i, j;
+        -:   72:   
+       11:   73:   for (i = 0; i < rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:   74:   {
+       40:   75:      for (j = 0; j < dim; j++)
+branch  0 taken 30
+branch  1 taken 10 (fallthrough)
+        -:   76:      {
+       30:   77:         dprintf("%5d ",vals[i][j]);
+call    0 returned 30
+        -:   78:      }
+       10:   79:      dprintf("\n");
+call    0 returned 10
+        -:   80:   }
+        1:   81:}
+        -:   82:
+        -:   83:/** parse_args()
+        -:   84: *  Parse the user arguments
+        -:   85: */
+function parse_args called 1 returned 100% blocks executed 57%
+        1:   86:void parse_args(int argc, char **argv) 
+        -:   87:{
+        -:   88:   int c;
+        -:   89:   extern char *optarg;
+        -:   90:   extern int optind;
+        -:   91:   
+        1:   92:   num_points = DEF_NUM_POINTS;
+        1:   93:   num_means = DEF_NUM_MEANS;
+        1:   94:   dim = DEF_DIM;
+        1:   95:   grid_size = DEF_GRID_SIZE;
+        -:   96:   
+        2:   97:   while ((c = getopt(argc, argv, "d:c:p:s:")) != EOF) 
+call    0 returned 1
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+        -:   98:   {
+    #####:   99:      switch (c) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+    #####:  100:         case 'd':
+    #####:  101:            dim = atoi(optarg);
+    #####:  102:            break;
+    #####:  103:         case 'c':
+    #####:  104:            num_means = atoi(optarg);
+    #####:  105:            break;
+    #####:  106:         case 'p':
+    #####:  107:            num_points = atoi(optarg);
+    #####:  108:            break;
+    #####:  109:         case 's':
+    #####:  110:            grid_size = atoi(optarg);
+    #####:  111:            break;
+    #####:  112:         case '?':
+    #####:  113:            printf("Usage: %s -d <vector dimension> -c <num clusters> -p <num points> -s <grid size>\n", argv[0]);
+call    0 never executed
+    #####:  114:            exit(1);
+call    0 never executed
+        -:  115:      }
+        -:  116:   }
+        -:  117:   
+        1:  118:   if (dim <= 0 || num_means <= 0 || num_points <= 0 || grid_size <= 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1
+    #####:  119:      printf("Illegal argument value. All values must be numeric and greater than 0\n");
+call    0 never executed
+    #####:  120:      exit(1);
+call    0 never executed
+        -:  121:   }
+        -:  122:   
+        1:  123:   printf("Dimension = %d\n", dim);
+call    0 returned 1
+        1:  124:   printf("Number of clusters = %d\n", num_means);
+call    0 returned 1
+        1:  125:   printf("Number of points = %d\n", num_points);
+call    0 returned 1
+        1:  126:   printf("Size of each dimension = %d\n", grid_size);   
+call    0 returned 1
+        1:  127:}
+        -:  128:
+        -:  129:/** generate_points()
+        -:  130: *  Generate the points
+        -:  131: */
+function generate_points called 2 returned 100% blocks executed 100%
+        2:  132:void generate_points(int **pts, int size) 
+        -:  133:{   
+        -:  134:   int i, j;
+        -:  135:   
+     1012:  136:   for (i=0; i<size; i++) 
+branch  0 taken 1010
+branch  1 taken 2 (fallthrough)
+        -:  137:   {
+     4040:  138:      for (j=0; j<dim; j++) 
+branch  0 taken 3030
+branch  1 taken 1010 (fallthrough)
+        -:  139:      {
+     3030:  140:         pts[i][j] = rand() % grid_size;
+call    0 returned 3030
+        -:  141:      }
+        -:  142:   }
+        2:  143:}
+        -:  144:
+        -:  145:/** get_sq_dist()
+        -:  146: *  Get the squared distance between 2 points
+        -:  147: */
+function get_sq_dist called 230000 returned 100% blocks executed 100%
+   230000:  148:static inline unsigned int get_sq_dist(int *v1, int *v2)
+        -:  149:{
+        -:  150:   int i;
+        -:  151:   
+   230000:  152:   unsigned int sum = 0;
+   920000:  153:   for (i = 0; i < dim; i++) 
+branch  0 taken 690000
+branch  1 taken 230000 (fallthrough)
+        -:  154:   {
+   690000:  155:      sum += ((v1[i] - v2[i]) * (v1[i] - v2[i])); 
+        -:  156:   }
+   230000:  157:   return sum;
+        -:  158:}
+        -:  159:
+        -:  160:/** add_to_sum()
+        -:  161: *	Helper function to update the total distance sum
+        -:  162: */
+function add_to_sum called 23000 returned 100% blocks executed 100%
+    23000:  163:void add_to_sum(int *sum, int *point)
+        -:  164:{
+        -:  165:   int i;
+        -:  166:   
+    92000:  167:   for (i = 0; i < dim; i++)
+branch  0 taken 69000
+branch  1 taken 23000 (fallthrough)
+        -:  168:   {
+    69000:  169:      sum[i] += point[i];   
+        -:  170:   }   
+    23000:  171:}
+        -:  172:
+        -:  173:/** find_clusters()
+        -:  174: *  Find the cluster that is most suitable for a given set of points
+        -:  175: */
+function find_clusters called 184 returned 100% blocks executed 100%
+      184:  176:void *find_clusters(void *arg) 
+        -:  177:{
+      184:  178:   thread_arg *t_arg = (thread_arg *)arg;
+        -:  179:   int i, j;
+        -:  180:   unsigned int min_dist, cur_dist;
+        -:  181:   int min_idx;
+      184:  182:   int start_idx = t_arg->start_idx;
+      184:  183:   int end_idx = start_idx + t_arg->num_pts;
+        -:  184:   
+    23184:  185:   for (i = start_idx; i < end_idx; i++) 
+branch  0 taken 23000
+branch  1 taken 184 (fallthrough)
+        -:  186:   {
+    23000:  187:      min_dist = get_sq_dist(points[i], means[0]);
+call    0 returned 23000
+    23000:  188:      min_idx = 0; 
+   230000:  189:      for (j = 1; j < num_means; j++)
+branch  0 taken 207000
+branch  1 taken 23000 (fallthrough)
+        -:  190:      {
+   207000:  191:         cur_dist = get_sq_dist(points[i], means[j]);
+call    0 returned 207000
+   207000:  192:         if (cur_dist < min_dist) 
+branch  0 taken 47200 (fallthrough)
+branch  1 taken 159800
+        -:  193:         {
+    47200:  194:            min_dist = cur_dist;
+    47200:  195:            min_idx = j;   
+        -:  196:         }
+        -:  197:      }
+        -:  198:      
+    23000:  199:      if (clusters[i] != min_idx) 
+branch  0 taken 1787 (fallthrough)
+branch  1 taken 21213
+        -:  200:      {
+     1787:  201:         clusters[i] = min_idx;
+     1787:  202:         modified = true;
+        -:  203:      }
+        -:  204:   }
+        -:  205:   
+      184:  206:   return (void *)0;   
+        -:  207:}
+        -:  208:
+        -:  209:/** calc_means()
+        -:  210: *  Compute the means for the various clusters
+        -:  211: */
+function calc_means called 184 returned 100% blocks executed 100%
+      184:  212:void *calc_means(void *arg)
+        -:  213:{
+        -:  214:   int i, j, grp_size;
+        -:  215:   int *sum;
+      184:  216:   thread_arg *t_arg = (thread_arg *)arg;
+      184:  217:   int start_idx = t_arg->start_idx;
+      184:  218:   int end_idx = start_idx + t_arg->num_pts;
+        -:  219:   
+      184:  220:   sum = t_arg->sum;
+        -:  221:   
+      414:  222:   for (i = start_idx; i < end_idx; i++) 
+branch  0 taken 230
+branch  1 taken 184 (fallthrough)
+        -:  223:   {
+      230:  224:      memset(sum, 0, dim * sizeof(int));
+      230:  225:      grp_size = 0;
+        -:  226:      
+   230230:  227:      for (j = 0; j < num_points; j++)
+branch  0 taken 230000
+branch  1 taken 230 (fallthrough)
+        -:  228:      {
+   230000:  229:         if (clusters[j] == i) 
+branch  0 taken 23000 (fallthrough)
+branch  1 taken 207000
+        -:  230:         {
+    23000:  231:            add_to_sum(sum, points[j]);
+call    0 returned 23000
+    23000:  232:            grp_size++;
+        -:  233:         }   
+        -:  234:      }
+        -:  235:      
+      920:  236:      for (j = 0; j < dim; j++)
+branch  0 taken 690
+branch  1 taken 230 (fallthrough)
+        -:  237:      {
+        -:  238:         //dprintf("div sum = %d, grp size = %d\n", sum[j], grp_size);
+      690:  239:         if (grp_size != 0)
+branch  0 taken 690 (fallthrough)
+branch  1 taken 0
+        -:  240:         { 
+      690:  241:            means[i][j] = sum[j] / grp_size;
+        -:  242:         }
+        -:  243:      }       
+        -:  244:   }
+      184:  245:   free(sum);
+      184:  246:   return (void *)0;
+        -:  247:}
+        -:  248:
+function main called 1 returned 100% blocks executed 70%
+        1:  249:int main(int argc, char **argv)
+        -:  250:{
+        -:  251:   
+        -:  252:   int num_procs, curr_point;
+        -:  253:   int i;
+        -:  254:   pthread_t *pid;
+        -:  255:   pthread_attr_t attr;
+        -:  256:   thread_arg *arg;
+        -:  257:   int num_per_thread, excess; 
+        -:  258:   
+        1:  259:   parse_args(argc, argv);   
+call    0 returned 1
+        -:  260:   
+        1:  261:   points = (int **)malloc(sizeof(int *) * num_points);
+     1001:  262:   for (i=0; i<num_points; i++) 
+branch  0 taken 1000
+branch  1 taken 1 (fallthrough)
+        -:  263:   {
+     1000:  264:      points[i] = (int *)malloc(sizeof(int) * dim);
+        -:  265:   }
+        1:  266:   dprintf("Generating points\n");
+call    0 returned 1
+        1:  267:   generate_points(points, num_points);
+call    0 returned 1
+        -:  268:   
+        1:  269:   means = (int **)malloc(sizeof(int *) * num_means);
+       11:  270:   for (i=0; i<num_means; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  271:   {
+       10:  272:      means[i] = (int *)malloc(sizeof(int) * dim);
+        -:  273:   }
+        1:  274:   dprintf("Generating means\n");
+call    0 returned 1
+        1:  275:   generate_points(means, num_means);
+call    0 returned 1
+        -:  276: 
+        1:  277:   clusters = (int *)malloc(sizeof(int) * num_points);
+        1:  278:   memset(clusters, -1, sizeof(int) * num_points);
+        -:  279:   
+        -:  280:   
+        1:  281:   pthread_attr_init(&attr);
+call    0 returned 1
+        1:  282:   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+call    0 returned 1
+        1:  283:   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  284:      
+        1:  285:   CHECK_ERROR( (pid = (pthread_t *)malloc(sizeof(pthread_t) * num_procs)) == NULL);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+branch  3 never executed
+branch  4 never executed
+call    5 never executed
+        -:  286:   
+        1:  287:   modified = true; 
+        -:  288:   
+        1:  289:   printf("Starting iterative algorithm\n");
+call    0 returned 1
+        -:  290:   
+        -:  291:   /* Create the threads to process the distances between the various
+        -:  292:   points and repeat until modified is no longer valid */
+        -:  293:   int num_threads;   
+       25:  294:   while (modified) 
+branch  0 taken 23
+branch  1 taken 1 (fallthrough)
+        -:  295:   {
+       23:  296:      num_per_thread = num_points / num_procs;
+       23:  297:      excess = num_points % num_procs;
+       23:  298:      modified = false;
+       23:  299:      dprintf(".");
+call    0 returned 23
+       23:  300:      curr_point = 0;
+       23:  301:      num_threads = 0;
+        -:  302:      
+      230:  303:      while (curr_point < num_points) {
+branch  0 taken 184
+branch  1 taken 23 (fallthrough)
+      184:  304:         CHECK_ERROR((arg = (thread_arg *)malloc(sizeof(thread_arg))) == NULL);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 184
+call    2 never executed
+branch  3 never executed
+branch  4 never executed
+call    5 never executed
+      184:  305:         arg->start_idx = curr_point;
+      184:  306:         arg->num_pts = num_per_thread;
+      184:  307:         if (excess > 0) {
+branch  0 taken 0 (fallthrough)
+branch  1 taken 184
+    #####:  308:            arg->num_pts++;
+    #####:  309:            excess--;            
+        -:  310:         }
+      184:  311:         CHECK_ERROR((pthread_create(&(pid[num_threads++]), &attr, find_clusters,
+call    0 returned 184
+branch  1 taken 0 (fallthrough)
+branch  2 taken 184
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  312:                                                   (void *)(arg))) != 0);
+      184:  313:         curr_point += arg->num_pts;
+        -:  314:      }
+        -:  315:      
+       23:  316:      assert (num_threads == num_procs);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 23
+call    2 never executed
+      207:  317:      for (i = 0; i < num_threads; i++) {
+branch  0 taken 184
+branch  1 taken 23 (fallthrough)
+      184:  318:         pthread_join(pid[i], NULL);   
+call    0 returned 184
+        -:  319:      }
+        -:  320:      
+       23:  321:      num_per_thread = num_means / num_procs;
+       23:  322:      excess = num_means % num_procs;
+       23:  323:      curr_point = 0;
+       23:  324:      num_threads = 0;
+      230:  325:      while (curr_point < num_means) {
+branch  0 taken 184
+branch  1 taken 23 (fallthrough)
+      184:  326:         CHECK_ERROR((arg = (thread_arg *)malloc(sizeof(thread_arg))) == NULL);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 184
+call    2 never executed
+branch  3 never executed
+branch  4 never executed
+call    5 never executed
+      184:  327:         arg->start_idx = curr_point;
+      184:  328:         arg->sum = (int *)malloc(dim * sizeof(int));
+      184:  329:         arg->num_pts = num_per_thread;
+      184:  330:         if (excess > 0) {
+branch  0 taken 46 (fallthrough)
+branch  1 taken 138
+       46:  331:            arg->num_pts++;
+       46:  332:            excess--;            
+        -:  333:         }
+      184:  334:         CHECK_ERROR((pthread_create(&(pid[num_threads++]), &attr, calc_means,
+call    0 returned 184
+branch  1 taken 0 (fallthrough)
+branch  2 taken 184
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  335:                                                   (void *)(arg))) != 0);
+      184:  336:         curr_point += arg->num_pts;
+        -:  337:      }
+        -:  338:      
+       23:  339:      assert (num_threads == num_procs);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 23
+call    2 never executed
+      207:  340:      for (i = 0; i < num_threads; i++) {
+branch  0 taken 184
+branch  1 taken 23 (fallthrough)
+      184:  341:         pthread_join(pid[i], NULL);   
+call    0 returned 184
+        -:  342:      }
+        -:  343:      
+        -:  344:   }
+        -:  345:   
+        -:  346:      
+        1:  347:   dprintf("\n\nFinal means:\n");
+call    0 returned 1
+        1:  348:   dump_points(means, num_means);
+call    0 returned 1
+        -:  349:
+     1001:  350:   for (i = 0; i < num_points; i++) 
+branch  0 taken 1000
+branch  1 taken 1 (fallthrough)
+     1000:  351:      free(points[i]);
+        1:  352:   free(points);
+        -:  353:   
+       11:  354:   for (i = 0; i < num_means; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  355:   {
+       10:  356:      free(means[i]);
+        -:  357:   }
+        1:  358:   free(means);
+        1:  359:   free(clusters);
+        -:  360:
+        1:  361:   return 0;
+        -:  362:}
