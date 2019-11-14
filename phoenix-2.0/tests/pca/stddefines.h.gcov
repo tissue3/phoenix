@@ -1,0 +1,123 @@
+        -:    0:Source:stddefines.h
+        -:    0:Graph:pca-pthread.gcno
+        -:    0:Data:pca-pthread.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/* Copyright (c) 2007-2009, Stanford University
+        -:    2:* All rights reserved.
+        -:    3:*
+        -:    4:* Redistribution and use in source and binary forms, with or without
+        -:    5:* modification, are permitted provided that the following conditions are met:
+        -:    6:*     * Redistributions of source code must retain the above copyright
+        -:    7:*       notice, this list of conditions and the following disclaimer.
+        -:    8:*     * Redistributions in binary form must reproduce the above copyright
+        -:    9:*       notice, this list of conditions and the following disclaimer in the
+        -:   10:*       documentation and/or other materials provided with the distribution.
+        -:   11:*     * Neither the name of Stanford University nor the
+        -:   12:*       names of its contributors may be used to endorse or promote products
+        -:   13:*       derived from this software without specific prior written permission.
+        -:   14:*
+        -:   15:* THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+        -:   16:* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        -:   17:* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        -:   18:* DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+        -:   19:* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        -:   20:* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        -:   21:* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        -:   22:* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        -:   23:* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        -:   24:* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -:   25:*/ 
+        -:   26:
+        -:   27:#ifndef STDDEFINES_H_
+        -:   28:#define STDDEFINES_H_
+        -:   29:
+        -:   30:#include <assert.h>
+        -:   31:#include <stdlib.h>
+        -:   32:#include <sys/time.h>
+        -:   33:#include <stdint.h>
+        -:   34:#include <stdio.h>
+        -:   35:
+        -:   36://#define TIMING
+        -:   37:
+        -:   38:/* Debug printf */
+        -:   39:#define dprintf(...) fprintf(stdout, __VA_ARGS__)
+        -:   40:
+        -:   41:/* Wrapper to check for errors */
+        -:   42:#define CHECK_ERROR(a)                                       \
+        -:   43:   if (a)                                                    \
+        -:   44:   {                                                         \
+        -:   45:      perror("Error at line\n\t" #a "\nSystem Msg");         \
+        -:   46:      assert ((a) == 0);                                     \
+        -:   47:   }
+        -:   48:
+function MALLOC called 2 returned 100% blocks executed 75%
+        2:   49:static inline void *MALLOC(size_t size)
+        -:   50:{
+        2:   51:   void * temp = malloc(size);
+        2:   52:   assert(temp);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+call    2 never executed
+        2:   53:   return temp;
+        -:   54:}
+        -:   55:
+        -:   56:static inline void *CALLOC(size_t num, size_t size)
+        -:   57:{
+        -:   58:   void * temp = calloc(num, size);
+        -:   59:   assert(temp);
+        -:   60:   return temp;
+        -:   61:}
+        -:   62:
+        -:   63:static inline void *REALLOC(void *ptr, size_t size)
+        -:   64:{
+        -:   65:   void * temp = realloc(ptr, size);
+        -:   66:   assert(temp);
+        -:   67:   return temp;
+        -:   68:}
+        -:   69:
+        -:   70:static inline char *GETENV(char *envstr)
+        -:   71:{
+        -:   72:   char *env = getenv(envstr);
+        -:   73:   if (!env) return "0";
+        -:   74:   else return env;
+        -:   75:}
+        -:   76:
+        -:   77:#define GET_TIME(start, end, duration)                                     \
+        -:   78:   duration.tv_sec = (end.tv_sec - start.tv_sec);                         \
+        -:   79:   if (end.tv_nsec >= start.tv_nsec) {                                     \
+        -:   80:      duration.tv_nsec = (end.tv_nsec - start.tv_nsec);                   \
+        -:   81:   }                                                                       \
+        -:   82:   else {                                                                  \
+        -:   83:      duration.tv_nsec = (1000000000L - (start.tv_nsec - end.tv_nsec));   \
+        -:   84:      duration.tv_sec--;                                                   \
+        -:   85:   }                                                                       \
+        -:   86:   if (duration.tv_nsec >= 1000000000L) {                                  \
+        -:   87:      duration.tv_sec++;                                                   \
+        -:   88:      duration.tv_nsec -= 1000000000L;                                     \
+        -:   89:   }
+        -:   90:
+        -:   91:static inline unsigned int time_diff (
+        -:   92:    struct timeval *end, struct timeval *begin)
+        -:   93:{
+        -:   94:#ifdef TIMING
+        -:   95:    uint64_t result;
+        -:   96:
+        -:   97:    result = end->tv_sec - begin->tv_sec;
+        -:   98:    result *= 1000000;     /* usec */
+        -:   99:    result += end->tv_usec - begin->tv_usec;
+        -:  100:
+        -:  101:    return result;
+        -:  102:#else
+        -:  103:    return 0;
+        -:  104:#endif
+        -:  105:}
+        -:  106:
+        -:  107:static inline void get_time (struct timeval *t)
+        -:  108:{
+        -:  109:#ifdef TIMING
+        -:  110:    gettimeofday (t, NULL);
+        -:  111:#endif
+        -:  112:}
+        -:  113:
+        -:  114:#endif // STDDEFINES_H_

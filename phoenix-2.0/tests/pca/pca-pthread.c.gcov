@@ -1,0 +1,431 @@
+        -:    0:Source:pca-pthread.c
+        -:    0:Graph:pca-pthread.gcno
+        -:    0:Data:pca-pthread.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/* Copyright (c) 2007-2009, Stanford University
+        -:    2:* All rights reserved.
+        -:    3:*
+        -:    4:* Redistribution and use in source and binary forms, with or without
+        -:    5:* modification, are permitted provided that the following conditions are met:
+        -:    6:*     * Redistributions of source code must retain the above copyright
+        -:    7:*       notice, this list of conditions and the following disclaimer.
+        -:    8:*     * Redistributions in binary form must reproduce the above copyright
+        -:    9:*       notice, this list of conditions and the following disclaimer in the
+        -:   10:*       documentation and/or other materials provided with the distribution.
+        -:   11:*     * Neither the name of Stanford University nor the names of its 
+        -:   12:*       contributors may be used to endorse or promote products derived from 
+        -:   13:*       this software without specific prior written permission.
+        -:   14:*
+        -:   15:* THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+        -:   16:* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        -:   17:* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        -:   18:* DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+        -:   19:* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        -:   20:* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        -:   21:* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        -:   22:* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        -:   23:* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        -:   24:* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -:   25:*/ 
+        -:   26:
+        -:   27:#include <stdio.h>
+        -:   28:#include <strings.h>
+        -:   29:#include <string.h>
+        -:   30:#include <stddef.h>
+        -:   31:#include <stdlib.h>
+        -:   32:#include <unistd.h>
+        -:   33:#include <assert.h>
+        -:   34:#include <string.h>
+        -:   35:#include <math.h>
+        -:   36:#include <pthread.h>
+        -:   37:#include "stddefines.h"
+        -:   38:
+        -:   39:#define DEF_GRID_SIZE 100  // all values in the matrix are from 0 to this value 
+        -:   40:#define DEF_NUM_ROWS 10
+        -:   41:#define DEF_NUM_COLS 10
+        -:   42:
+        -:   43:int num_rows;
+        -:   44:int num_cols;
+        -:   45:int grid_size;
+        -:   46:int num_procs;
+        -:   47:int next_row;
+        -:   48:
+        -:   49:int **matrix, **cov;
+        -:   50:int *mean;
+        -:   51:pthread_mutex_t row_lock;
+        -:   52:
+        -:   53:/* Structure that stores the rows
+        -:   54:which each thread is supposed to process */
+        -:   55:typedef struct {
+        -:   56:   int first_row;
+        -:   57:   int last_row;
+        -:   58:} mean_arg_t;
+        -:   59:
+        -:   60:/** parse_args()
+        -:   61: *  Parse the user arguments to determine the number of rows and colums
+        -:   62: */   
+function parse_args called 1 returned 100% blocks executed 56%
+        1:   63:void parse_args(int argc, char **argv) 
+        -:   64:{
+        -:   65:   int c;
+        -:   66:   extern char *optarg;
+        -:   67:   extern int optind;
+        -:   68:   
+        1:   69:   num_rows = DEF_NUM_ROWS;
+        1:   70:   num_cols = DEF_NUM_COLS;
+        1:   71:   grid_size = DEF_GRID_SIZE;
+        -:   72:   
+        2:   73:   while ((c = getopt(argc, argv, "r:c:s:")) != EOF) 
+call    0 returned 1
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+        -:   74:   {
+    #####:   75:      switch (c) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+    #####:   76:         case 'r':
+    #####:   77:            num_rows = atoi(optarg);
+    #####:   78:            break;
+    #####:   79:         case 'c':
+    #####:   80:            num_cols = atoi(optarg);
+    #####:   81:            break;
+    #####:   82:         case 's':
+    #####:   83:            grid_size = atoi(optarg);
+    #####:   84:            break;
+    #####:   85:         case '?':
+    #####:   86:            printf("Usage: %s -r <num_rows> -c <num_cols> -s <max value>\n", argv[0]);
+call    0 never executed
+    #####:   87:            exit(1);
+call    0 never executed
+        -:   88:      }
+        -:   89:   }
+        -:   90:   
+        1:   91:   if (num_rows <= 0 || num_cols <= 0 || grid_size <= 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+branch  4 taken 0 (fallthrough)
+branch  5 taken 1
+    #####:   92:      printf("Illegal argument value. All values must be numeric and greater than 0\n");
+call    0 never executed
+    #####:   93:      exit(1);
+call    0 never executed
+        -:   94:   }
+        -:   95:
+        1:   96:   printf("Number of rows = %d\n", num_rows);
+call    0 returned 1
+        1:   97:   printf("Number of cols = %d\n", num_cols);
+call    0 returned 1
+        1:   98:   printf("Max value for each element = %d\n", grid_size);   
+call    0 returned 1
+        1:   99:}
+        -:  100:
+        -:  101:/** dump_points()
+        -:  102: *  Print the values in the matrix to the screen
+        -:  103: */
+function dump_points called 2 returned 100% blocks executed 100%
+        2:  104:void dump_points(int **vals, int rows, int cols)
+        -:  105:{
+        -:  106:   int i, j;
+        -:  107:   
+       22:  108:   for (i = 0; i < rows; i++) 
+branch  0 taken 20
+branch  1 taken 2 (fallthrough)
+        -:  109:   {
+      220:  110:      for (j = 0; j < cols; j++)
+branch  0 taken 200
+branch  1 taken 20 (fallthrough)
+        -:  111:      {
+      200:  112:         dprintf("%5d ",vals[i][j]);
+call    0 returned 200
+        -:  113:      }
+       20:  114:      dprintf("\n");
+call    0 returned 20
+        -:  115:   }
+        2:  116:}
+        -:  117:
+        -:  118:/** generate_points()
+        -:  119: *  Create the values in the matrix
+        -:  120: */
+function generate_points called 1 returned 100% blocks executed 100%
+        1:  121:void generate_points(int **pts, int rows, int cols) 
+        -:  122:{   
+        -:  123:   int i, j;
+        -:  124:   
+       11:  125:   for (i=0; i<rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  126:   {
+      110:  127:      for (j=0; j<cols; j++) 
+branch  0 taken 100
+branch  1 taken 10 (fallthrough)
+        -:  128:      {
+      100:  129:         pts[i][j] = rand() % grid_size;
+call    0 returned 100
+        -:  130:      }
+        -:  131:   }
+        1:  132:}
+        -:  133:
+        -:  134:/** calc_mean()
+        -:  135: *  Compute the mean for the rows allocated to a thread
+        -:  136: */
+function calc_mean called 8 returned 100% blocks executed 100%
+        8:  137:void *calc_mean(void *arg) {
+        -:  138:   int i, j;
+        8:  139:   int sum = 0;
+        8:  140:   mean_arg_t *mean_arg = (mean_arg_t *)arg;
+        -:  141:   
+       18:  142:   for (i = mean_arg->first_row; i < mean_arg->last_row; i++) {
+branch  0 taken 10
+branch  1 taken 8 (fallthrough)
+       10:  143:      sum = 0;
+      110:  144:      for (j = 0; j < num_cols; j++) {
+branch  0 taken 100
+branch  1 taken 10 (fallthrough)
+      100:  145:         sum += matrix[i][j];
+        -:  146:      }
+       10:  147:      mean[i] = sum / num_cols;   
+        -:  148:   }
+        -:  149:   
+        8:  150:   return (void *)0;
+        -:  151:}
+        -:  152:
+        -:  153:/** calc_cov()
+        -:  154: *  Calculate the covariance for the portion of the
+        -:  155: *  matrix allocated to a thread. Locking is reuqired
+        -:  156: */
+function calc_cov called 8 returned 100% blocks executed 100%
+        8:  157:void *calc_cov(void *arg) {
+        -:  158:   int i, j, k;
+        -:  159:   int sum;
+        -:  160:   
+        8:  161:   pthread_mutex_lock(&row_lock);
+call    0 returned 8
+        8:  162:   i = next_row;
+        8:  163:   next_row++;
+        8:  164:   pthread_mutex_unlock(&row_lock);
+call    0 returned 8
+        -:  165:   
+       26:  166:   while (i < num_rows) {
+branch  0 taken 10
+branch  1 taken 8 (fallthrough)
+       65:  167:      for (j = i; j < num_rows; j++) {
+branch  0 taken 55
+branch  1 taken 10 (fallthrough)
+       55:  168:         sum = 0;
+      605:  169:         for (k = 0; k < num_cols; k++) {
+branch  0 taken 550
+branch  1 taken 55 (fallthrough)
+      550:  170:            sum = sum + ((matrix[i][k] - mean[i]) * (matrix[j][k] - mean[j]));
+        -:  171:         }
+       55:  172:         cov[i][j] = cov[j][i] = sum/(num_cols-1);
+        -:  173:      }
+       10:  174:      pthread_mutex_lock(&row_lock);
+call    0 returned 10
+       10:  175:      i = next_row;
+       10:  176:      next_row++;
+       10:  177:      pthread_mutex_unlock(&row_lock);
+call    0 returned 10
+        -:  178:   }
+        -:  179:   
+        8:  180:   return (void *)0;   
+        -:  181:}
+        -:  182:
+        -:  183:/** pthread_mean()
+        -:  184: *  Creates threads to compute the mean. Each thread computes
+        -:  185: *  the mean for a set of rows
+        -:  186: */
+function pthread_mean called 1 returned 100% blocks executed 61%
+        1:  187:void pthread_mean() {
+        -:  188:   pthread_attr_t attr;
+        -:  189:   pthread_t * tid;
+        -:  190:   int i;
+        -:  191:   mean_arg_t *mean_args;
+        -:  192:
+        1:  193:   CHECK_ERROR((num_procs = sysconf(_SC_NPROCESSORS_ONLN)) <= 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        1:  194:   printf("The number of processors is %d\n", num_procs);
+call    0 returned 1
+        -:  195:
+        1:  196:   tid = (pthread_t *)MALLOC(num_procs * sizeof(pthread_t));
+call    0 returned 1
+        1:  197:   mean_args = (mean_arg_t *)malloc(num_procs * sizeof(mean_arg_t));
+        -:  198:   
+        -:  199:   /* Thread must be scheduled systemwide */
+        1:  200:   pthread_attr_init(&attr);
+call    0 returned 1
+        1:  201:   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+call    0 returned 1
+        -:  202:   
+        1:  203:   int rows_per_thread = num_rows / num_procs;
+        1:  204:   int excess = num_rows - (rows_per_thread * num_procs);
+        1:  205:   int curr_row = 0;
+        -:  206:   
+        -:  207:   /* Assign rows to each thread. One thread per processor */
+        9:  208:   for(i=0; i<num_procs; i++){
+branch  0 taken 8
+branch  1 taken 1 (fallthrough)
+        8:  209:      mean_args[i].first_row = curr_row;
+        8:  210:      mean_args[i].last_row = curr_row + rows_per_thread;
+        8:  211:      if (excess > 0) {
+branch  0 taken 2 (fallthrough)
+branch  1 taken 6
+        2:  212:            mean_args[i].last_row++;
+        2:  213:            excess--;
+        -:  214:      }
+        8:  215:      curr_row = mean_args[i].last_row;
+        8:  216:      CHECK_ERROR(pthread_create(&tid[i], &attr, calc_mean, 
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  217:                                              (void *)(&(mean_args[i]))) != 0);
+        -:  218:   }
+        -:  219:
+        -:  220:   /* Barrier, wait for all threads to finish */
+        9:  221:   for (i = 0; i < num_procs; i++)
+branch  0 taken 8
+branch  1 taken 1 (fallthrough)
+        -:  222:   {
+        8:  223:      CHECK_ERROR(pthread_join(tid[i], NULL) != 0);
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  224:   }
+        1:  225:   free(tid);
+        1:  226:}
+        -:  227:
+        -:  228:/** pthread_cov()
+        -:  229: *  Creates threads to compute the covariance. Each thread computes
+        -:  230: *  the covariance for a portion of the matrix
+        -:  231: */
+function pthread_cov called 1 returned 100% blocks executed 65%
+        1:  232:void pthread_cov() {
+        -:  233:   int i;
+        -:  234:   pthread_attr_t attr;
+        -:  235:   pthread_t * tid;
+        -:  236:   
+        1:  237:   pthread_mutex_init(&row_lock, NULL);
+call    0 returned 1
+        -:  238:   
+        -:  239:   /* Thread must be scheduled systemwide */
+        1:  240:   pthread_attr_init(&attr);
+call    0 returned 1
+        1:  241:   pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+call    0 returned 1
+        1:  242:   next_row = 0;
+        -:  243:   
+        1:  244:   tid = (pthread_t *)MALLOC(num_procs * sizeof(pthread_t));
+call    0 returned 1
+        -:  245:   
+        9:  246:   for(i=0; i<num_procs; i++){
+branch  0 taken 8
+branch  1 taken 1 (fallthrough)
+        8:  247:      CHECK_ERROR(pthread_create(&tid[i], &attr, calc_cov, NULL) != 0);
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  248:   }
+        -:  249:
+        -:  250:   /* Barrier, wait for all threads to finish */
+        9:  251:   for (i = 0; i < num_procs; i++) {
+branch  0 taken 8
+branch  1 taken 1 (fallthrough)
+        8:  252:      CHECK_ERROR(pthread_join(tid[i], NULL) != 0);
+call    0 returned 8
+branch  1 taken 0 (fallthrough)
+branch  2 taken 8
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  253:   }
+        1:  254:}
+        -:  255:
+        -:  256:
+        -:  257:
+function main called 1 returned 100% blocks executed 100%
+        1:  258:int main(int argc, char **argv) {
+        -:  259:   
+        -:  260:   int i;
+        -:  261:   
+        1:  262:   parse_args(argc, argv);   
+call    0 returned 1
+        -:  263:   
+        -:  264:   // Create the matrix to store the points
+        1:  265:   matrix = (int **)malloc(sizeof(int *) * num_rows);
+       11:  266:   for (i=0; i<num_rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  267:   {
+       10:  268:      matrix[i] = (int *)malloc(sizeof(int) * num_cols);
+        -:  269:   }
+        -:  270:   //Generate random values for all the points in the matrix
+        1:  271:   generate_points(matrix, num_rows, num_cols);
+call    0 returned 1
+        -:  272:   
+        -:  273:   // Print the points
+        1:  274:   dump_points(matrix, num_rows, num_cols);
+call    0 returned 1
+        -:  275:   
+        -:  276:   // Allocate Memory to store the mean and the covariance matrix
+        1:  277:   mean = (int *)malloc(sizeof(int) * num_rows);
+        1:  278:   cov = (int **)malloc(sizeof(int *) * num_rows);
+       11:  279:   for (i=0; i<num_rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  280:   {
+       10:  281:      cov[i] = (int *)malloc(sizeof(int) * num_rows);
+        -:  282:   }
+        -:  283:
+        -:  284:	 // Compute the mean and the covariance
+        1:  285:   pthread_mean();
+call    0 returned 1
+        1:  286:   pthread_cov();
+call    0 returned 1
+        -:  287:   
+        -:  288:   
+        1:  289:   dump_points(cov, num_rows, num_rows);
+call    0 returned 1
+        -:  290:   
+       11:  291:   for (i=0; i<num_rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  292:   {
+       10:  293:      free(cov[i]);
+       10:  294:      free(matrix[i]);
+        -:  295:   } 
+        1:  296:   free(mean);
+        1:  297:   free(cov);
+        1:  298:   free(matrix);
+        1:  299:   return 0;
+        -:  300:}
+        -:  301:
+        -:  302:
