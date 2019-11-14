@@ -1,0 +1,43 @@
+Function 'main'
+Lines executed:91.67% of 24
+Branches executed:58.82% of 34
+Taken at least once:32.35% of 34
+Calls executed:36.67% of 30
+
+Function 'wordcount_addword'
+Lines executed:80.95% of 21
+Branches executed:100.00% of 8
+Taken at least once:87.50% of 8
+Calls executed:100.00% of 1
+
+Function 'dobsearch'
+Lines executed:100.00% of 11
+Branches executed:100.00% of 6
+Taken at least once:100.00% of 6
+No calls
+
+Function 'wordcount_getword'
+Lines executed:92.59% of 27
+Branches executed:100.00% of 20
+Taken at least once:85.00% of 20
+Calls executed:25.00% of 4
+
+Function 'wordcount_splitter'
+Lines executed:100.00% of 13
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+Calls executed:100.00% of 1
+
+Function 'wordcount_cmp'
+Lines executed:100.00% of 8
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+No calls
+
+File 'word_count-seq.c'
+Lines executed:92.31% of 104
+Branches executed:81.08% of 74
+Taken at least once:63.51% of 74
+Calls executed:38.89% of 36
+Creating 'word_count-seq.c.gcov'
+

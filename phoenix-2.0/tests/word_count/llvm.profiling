@@ -1,0 +1,45 @@
+Wordcount: Running...
+Wordcount Serial: Running
+Use len is 46032
+THE: 66360
+OF: 39791
+BY: 33568
+TO: 31304
+AND: 29526
+XXX: 27237
+A: 23570
+IN: 21554
+GUTENBERG: 17134
+TXT: 16311
+
+
+llvmInstrAtomicCounter: 1148215642
+basicBlockAtomicCounter: 213577613
+mulAtomicCounter: 46026
+memOpAtomicCounter: 512924102
+branchAtomicCounter: 199431461
+wordcount_cmp: 579521
+wordcount_splitter: 1
+calloc: 0
+malloc: 0
+wordcount_getword: 1
+free: 0
+__assert_fail: 0
+toupper: 0
+wordcount_addword: 1513425
+dobsearch: 1513425
+strcmp: 0
+llvm.memmove.p0i8.p0i8.i64: 0
+realloc: 0
+main: 1
+printf: 0
+exit: 0
+open: 0
+perror: 0
+fstat: 0
+mmap: 0
+atoi: 0
+qsort: 0
+fprintf: 0
+munmap: 0
+close: 0
