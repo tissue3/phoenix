@@ -1,0 +1,25 @@
+Function 'main'
+Lines executed:82.00% of 50
+Branches executed:75.00% of 40
+Taken at least once:47.50% of 40
+Calls executed:41.46% of 41
+
+Function 'swap_bytes'
+Lines executed:0.00% of 7
+Branches executed:0.00% of 2
+Taken at least once:0.00% of 2
+Calls executed:0.00% of 1
+
+Function 'test_endianess'
+Lines executed:58.33% of 12
+Branches executed:50.00% of 4
+Taken at least once:25.00% of 4
+Calls executed:25.00% of 4
+
+File 'histogram-seq.c'
+Lines executed:69.57% of 69
+Branches executed:69.57% of 46
+Taken at least once:43.48% of 46
+Calls executed:39.13% of 46
+Creating 'histogram-seq.c.gcov'
+

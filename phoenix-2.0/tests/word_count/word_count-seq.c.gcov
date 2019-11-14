@@ -1,0 +1,407 @@
+        -:    0:Source:word_count-seq.c
+        -:    0:Graph:word_count-seq.gcno
+        -:    0:Data:word_count-seq.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/* Copyright (c) 2007-2009, Stanford University
+        -:    2:* All rights reserved.
+        -:    3:*
+        -:    4:* Redistribution and use in source and binary forms, with or without
+        -:    5:* modification, are permitted provided that the following conditions are met:
+        -:    6:*     * Redistributions of source code must retain the above copyright
+        -:    7:*       notice, this list of conditions and the following disclaimer.
+        -:    8:*     * Redistributions in binary form must reproduce the above copyright
+        -:    9:*       notice, this list of conditions and the following disclaimer in the
+        -:   10:*       documentation and/or other materials provided with the distribution.
+        -:   11:*     * Neither the name of Stanford University nor the names of its 
+        -:   12:*       contributors may be used to endorse or promote products derived from 
+        -:   13:*       this software without specific prior written permission.
+        -:   14:*
+        -:   15:* THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+        -:   16:* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        -:   17:* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        -:   18:* DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+        -:   19:* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        -:   20:* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        -:   21:* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        -:   22:* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        -:   23:* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        -:   24:* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -:   25:*/ 
+        -:   26:
+        -:   27:#include <stdio.h>
+        -:   28:#include <strings.h>
+        -:   29:#include <string.h>
+        -:   30:#include <stddef.h>
+        -:   31:#include <stdlib.h>
+        -:   32:#include <unistd.h>
+        -:   33:#include <assert.h>
+        -:   34:#include <sys/mman.h>
+        -:   35:#include <sys/stat.h>
+        -:   36:#include <fcntl.h>
+        -:   37:#include <ctype.h>
+        -:   38:#include <pthread.h>
+        -:   39:
+        -:   40:#include "map_reduce.h"
+        -:   41:#include "stddefines.h"
+        -:   42:#include "sort-pthread.h"
+        -:   43:
+        -:   44:#define DEFAULT_DISP_NUM 10
+        -:   45:#define START_ARRAY_SIZE 2000
+        -:   46:
+        -:   47:typedef struct {
+        -:   48:	char* word;
+        -:   49:	int count;
+        -:   50:} wc_count_t;
+        -:   51:
+        -:   52:typedef struct {
+        -:   53:   long flen;
+        -:   54:   char *fdata;
+        -:   55:} wc_data_t;
+        -:   56:
+        -:   57:enum {
+        -:   58:   IN_WORD,
+        -:   59:   NOT_IN_WORD
+        -:   60:};
+        -:   61:
+        -:   62:wc_count_t* words;
+        -:   63:int use_len;
+        -:   64:int length;
+        -:   65:
+        -:   66:void wordcount_getword(void *args_in);
+        -:   67:void wordcount_addword(char* word, int len) ;
+        -:   68:
+        -:   69:/** wordcount_cmp()
+        -:   70: *  Comparison function to compare 2 words
+        -:   71: */
+function wordcount_cmp called 579521 returned 100% blocks executed 100%
+   579521:   72:int wordcount_cmp(const void *v1, const void *v2)
+        -:   73:{
+   579521:   74:   wc_count_t* w1 = (wc_count_t*)v1;
+   579521:   75:   wc_count_t* w2 = (wc_count_t*)v2;
+        -:   76:
+   579521:   77:   int i1 = w1->count;
+   579521:   78:   int i2 = w2->count;
+        -:   79:
+   579521:   80:   if (i1 < i2) return 1;
+branch  0 taken 245606 (fallthrough)
+branch  1 taken 333915
+   333915:   81:   else if (i1 > i2) return -1;
+branch  0 taken 63023 (fallthrough)
+branch  1 taken 270892
+   270892:   82:   else return 0;
+        -:   83:}
+        -:   84:
+        -:   85:/** wordcount_splitter()
+        -:   86: *  Memory map the file and divide file on a word border i.e. a space.
+        -:   87: */
+function wordcount_splitter called 1 returned 100% blocks executed 100%
+        1:   88:void wordcount_splitter(void *data_in)
+        -:   89:{
+        -:   90:	int i;
+        1:   91:   wc_data_t * data = (wc_data_t *)data_in; 
+        1:   92:   words = (wc_count_t*)calloc(START_ARRAY_SIZE,sizeof(wc_count_t));
+        1:   93:   length = START_ARRAY_SIZE;
+        1:   94:   use_len = 0;
+        -:   95:
+     2001:   96:   for(i=0;i<START_ARRAY_SIZE;i++)
+branch  0 taken 2000
+branch  1 taken 1 (fallthrough)
+     2000:   97:	   words[i].count = 0;
+        -:   98:
+        1:   99:   map_args_t* out = (map_args_t*)malloc(sizeof(map_args_t));
+        1:  100:   out->data = data->fdata;
+        1:  101:   out->length = data->flen;
+        -:  102:
+        1:  103:   wordcount_getword(out);
+call    0 returned 1
+        1:  104:   free(out);
+        1:  105:}
+        -:  106:
+        -:  107:/** wordcount_map()
+        -:  108: * Go through the file and update the count for each unique word
+        -:  109: */
+function wordcount_getword called 1 returned 100% blocks executed 86%
+        1:  110:void wordcount_getword(void *args_in) 
+        -:  111:{
+        1:  112:   map_args_t* args = (map_args_t*)args_in;
+        -:  113:
+        -:  114:   char *curr_start, curr_ltr;
+        1:  115:   int state = NOT_IN_WORD;
+        -:  116:   int i;
+        1:  117:   assert(args);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  118:
+        1:  119:   char *data = (char *)(args->data);
+        1:  120:   curr_start = data;
+        1:  121:   assert(data);
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+call    2 never executed
+        -:  122:
+        -:  123:   //printf("args_len is %d\n", args->length);
+        -:  124:
+ 10539779:  125:   for (i = 0; i < args->length; i++)
+branch  0 taken 10539778
+branch  1 taken 1 (fallthrough)
+        -:  126:   {
+ 10539778:  127:      curr_ltr = toupper(data[i]);
+ 10539778:  128:      switch (state)
+branch  0 taken 7091150
+branch  1 taken 3448628
+        -:  129:      {
+  7091150:  130:      case IN_WORD:
+  7091150:  131:         data[i] = curr_ltr;
+  7091150:  132:         if ((curr_ltr < 'A' || curr_ltr > 'Z') && curr_ltr != '\'')
+branch  0 taken 5619422 (fallthrough)
+branch  1 taken 1471728
+branch  2 taken 55668 (fallthrough)
+branch  3 taken 5563754
+branch  4 taken 1513425 (fallthrough)
+branch  5 taken 13971
+        -:  133:         {
+  1513425:  134:            data[i] = 0;
+        -:  135:			//printf("\nthe word is %s\n\n",curr_start);
+  1513425:  136:			wordcount_addword(curr_start, &data[i] - curr_start + 1);
+call    0 returned 1513425
+  1513425:  137:            state = NOT_IN_WORD;
+        -:  138:         }
+  7091150:  139:      break;
+        -:  140:
+  3448628:  141:      default:
+        -:  142:      case NOT_IN_WORD:
+  3448628:  143:         if (curr_ltr >= 'A' && curr_ltr <= 'Z')
+branch  0 taken 1617387 (fallthrough)
+branch  1 taken 1831241
+branch  2 taken 1513425 (fallthrough)
+branch  3 taken 103962
+        -:  144:         {
+  1513425:  145:            curr_start = &data[i];
+  1513425:  146:            data[i] = curr_ltr;
+  1513425:  147:            state = IN_WORD;
+        -:  148:         }
+  3448628:  149:         break;
+        -:  150:      }
+        -:  151:   }
+        -:  152:
+        -:  153:   // Add the last word
+        1:  154:   if (state == IN_WORD)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  155:   {
+    #####:  156:			data[args->length] = 0;
+        -:  157:			//printf("\nthe word is %s\n\n",curr_start);
+    #####:  158:			wordcount_addword(curr_start, &data[i] - curr_start + 1);
+call    0 never executed
+        -:  159:   }
+        1:  160:}
+        -:  161:
+        -:  162:/** dobsearch()
+        -:  163: *  Search for a specific word in the array
+        -:  164: */
+function dobsearch called 1513425 returned 100% blocks executed 100%
+  1513425:  165:int dobsearch(char* word)
+        -:  166:{
+  1513425:  167:   int cmp, high = use_len, low = -1, next;
+        -:  168:
+        -:  169:   // Binary search the array to find the key
+ 22500334:  170:   while (high - low > 1)
+branch  0 taken 20940877
+branch  1 taken 46032 (fallthrough)
+        -:  171:   {
+ 20940877:  172:       next = (high + low) / 2;   
+ 20940877:  173:       cmp = strcmp(word, words[next].word);
+ 20940877:  174:       if (cmp == 0)
+branch  0 taken 1467393 (fallthrough)
+branch  1 taken 19473484
+  1467393:  175:          return next;
+ 19473484:  176:       else if (cmp < 0)
+branch  0 taken 9541887 (fallthrough)
+branch  1 taken 9931597
+  9541887:  177:           high = next;
+        -:  178:       else
+  9931597:  179:           low = next;
+        -:  180:   }
+        -:  181:
+    46032:  182:   return high;
+        -:  183:}
+        -:  184:
+        -:  185:/** wordcount_addword()
+        -:  186: * Add a new word to the array in the correct sorted postion
+        -:  187: */
+function wordcount_addword called 1513425 returned 100% blocks executed 91%
+  1513425:  188:void wordcount_addword(char* word, int len) 
+        -:  189:{
+  1513425:  190:	int pos = dobsearch(word);
+call    0 returned 1513425
+        -:  191:
+  1513425:  192:   if (pos >= use_len)
+branch  0 taken 16 (fallthrough)
+branch  1 taken 1513409
+        -:  193:   {
+        -:  194:      // at end
+       16:  195:      words[use_len].word = word;
+       16:  196:	   words[use_len].count = 1;
+       16:  197:	   use_len++;
+        -:  198:	}
+  1513409:  199:   else if (pos < 0)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1513409
+        -:  200:   {
+        -:  201:      // at front
+    #####:  202:      memmove(&words[1], words, use_len*sizeof(wc_count_t));
+    #####:  203:      words[0].word = word;
+    #####:  204:	   words[0].count = 1;
+    #####:  205:	   use_len++;
+        -:  206:   }
+  1513409:  207:   else if (strcmp(word, words[pos].word) == 0)
+branch  0 taken 1467393 (fallthrough)
+branch  1 taken 46016
+        -:  208:   {
+        -:  209:      // match
+  1467393:  210:      words[pos].count++;
+        -:  211:	}
+        -:  212:   else
+        -:  213:   {
+        -:  214:      // insert at pos
+    46016:  215:      memmove(&words[pos+1], &words[pos], (use_len-pos)*sizeof(wc_count_t));
+    46016:  216:      words[pos].word = word;
+    46016:  217:	   words[pos].count = 1;
+    46016:  218:	   use_len++;
+        -:  219:   }
+        -:  220:
+  1513425:  221:	if(use_len == length)
+branch  0 taken 5 (fallthrough)
+branch  1 taken 1513420
+        -:  222:	{
+        5:  223:		length *= 2;
+        5:  224:	   words = (wc_count_t*)realloc(words,length*sizeof(wc_count_t));
+        -:  225:	}
+  1513425:  226:}
+        -:  227:
+function main called 1 returned 100% blocks executed 47%
+        1:  228:int main(int argc, char *argv[]) {
+        -:  229:   
+        -:  230:   int i;
+        -:  231:   int fd;
+        -:  232:   char * fdata;
+        -:  233:   int disp_num;
+        -:  234:   struct stat finfo;
+        -:  235:   char * fname, * disp_num_str;
+        -:  236:
+        -:  237:   // Make sure a filename is specified
+        1:  238:   if (argv[1] == NULL)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+        -:  239:   {
+    #####:  240:      printf("USAGE: %s <filename> [Top # of results to display]\n", argv[0]);
+call    0 never executed
+    #####:  241:      exit(1);
+call    0 never executed
+        -:  242:   }
+        -:  243:   
+        1:  244:   fname = argv[1];
+        1:  245:   disp_num_str = argv[2];
+        -:  246:
+        1:  247:   printf("Wordcount: Running...\n");
+call    0 returned 1
+        -:  248:   
+        -:  249:   // Read in the file
+        1:  250:   CHECK_ERROR((fd = open(fname, O_RDONLY)) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  251:   // Get the file info (for file length)
+        1:  252:   CHECK_ERROR(fstat(fd, &finfo) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  253:   // Memory map the file
+        1:  254:   CHECK_ERROR((fdata = mmap(0, finfo.st_size + 1, 
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  255:      PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL);
+        -:  256:   
+        -:  257:   // Get the number of results to display
+        1:  258:   CHECK_ERROR((disp_num = (disp_num_str == NULL) ? 
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+branch  8 never executed
+call    9 never executed
+        -:  259:      DEFAULT_DISP_NUM : atoi(disp_num_str)) <= 0);
+        -:  260:   
+        -:  261:   // Setup splitter args
+        -:  262:   wc_data_t wc_data;
+        1:  263:   wc_data.flen = finfo.st_size;
+        1:  264:   wc_data.fdata = fdata;
+        -:  265:
+        1:  266:   printf("Wordcount Serial: Running\n");
+call    0 returned 1
+        -:  267:   
+        1:  268:   wordcount_splitter(&wc_data);
+call    0 returned 1
+        -:  269:   
+        1:  270:   qsort(words, use_len, sizeof(wc_count_t), wordcount_cmp);
+call    0 returned 1
+        -:  271:   
+        -:  272:
+        1:  273:	dprintf("Use len is %d\n", use_len);
+call    0 returned 1
+        -:  274:   
+       11:  275:   for(i=0; i< disp_num && i < use_len ; i++)
+branch  0 taken 10 (fallthrough)
+branch  1 taken 1
+branch  2 taken 10
+branch  3 taken 0 (fallthrough)
+        -:  276:   {
+       10:  277:		wc_count_t* temp = &(words[i]);
+       10:  278:      dprintf("%s: %d\n", temp->word, temp->count);
+call    0 returned 10
+        -:  279:   }
+        1:  280:   free(words);
+        -:  281:
+        1:  282:   CHECK_ERROR(munmap(fdata, finfo.st_size + 1) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        1:  283:   CHECK_ERROR(close(fd) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+call    3 never executed
+call    4 never executed
+branch  5 never executed
+branch  6 never executed
+call    7 never executed
+        -:  284:
+        1:  285:   return 0;
+        -:  286:}
