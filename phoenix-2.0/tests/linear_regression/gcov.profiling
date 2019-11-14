@@ -1,13 +1,13 @@
 Function 'main'
-Lines executed:0.00% of 42
-Branches executed:0.00% of 24
-Taken at least once:0.00% of 24
-Calls executed:0.00% of 34
+Lines executed:95.24% of 42
+Branches executed:58.33% of 24
+Taken at least once:33.33% of 24
+Calls executed:50.00% of 34
 
 File 'linear_regression-seq.c'
-Lines executed:0.00% of 42
-Branches executed:0.00% of 24
-Taken at least once:0.00% of 24
-Calls executed:0.00% of 34
+Lines executed:95.24% of 42
+Branches executed:58.33% of 24
+Taken at least once:33.33% of 24
+Calls executed:50.00% of 34
 Creating 'linear_regression-seq.c.gcov'
 

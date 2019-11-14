@@ -1,8 +1,8 @@
         -:    0:Source:linear_regression-seq.c
         -:    0:Graph:linear_regression-seq.gcno
-        -:    0:Data:-
-        -:    0:Runs:0
-        -:    0:Programs:0
+        -:    0:Data:linear_regression-seq.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
         -:    1:/* Copyright (c) 2007-2009, Stanford University
         -:    2:* All rights reserved.
         -:    3:*
@@ -49,8 +49,8 @@
         -:   44:   char y;
         -:   45:} POINT_T;
         -:   46:
-function main called 0 returned 0% blocks executed 0%
-    #####:   47:int main(int argc, char *argv[]) {
+function main called 1 returned 100% blocks executed 56%
+        1:   47:int main(int argc, char *argv[]) {
         -:   48:
         -:   49:   int fd;
         -:   50:   char * fdata;
@@ -60,9 +60,9 @@ function main called 0 returned 0% blocks executed 0%
         -:   54:
         -:   55:
         -:   56:   // Make sure a filename is specified
-    #####:   57:   if (argv[1] == NULL)
-branch  0 never executed
-branch  1 never executed
+        1:   57:   if (argv[1] == NULL)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
         -:   58:   {
     #####:   59:      printf("USAGE: %s <filename>\n", argv[0]);
 call    0 never executed
@@ -70,36 +70,36 @@ call    0 never executed
 call    0 never executed
         -:   61:   }
         -:   62:   
-    #####:   63:   fname = argv[1];
+        1:   63:   fname = argv[1];
         -:   64:
-    #####:   65:   printf("Linear Regression Serial: Running...\n");
-call    0 never executed
+        1:   65:   printf("Linear Regression Serial: Running...\n");
+call    0 returned 1
         -:   66:   
         -:   67:   // Read in the file
-    #####:   68:   CHECK_ERROR((fd = open(fname, O_RDONLY)) < 0);
-call    0 never executed
-branch  1 never executed
-branch  2 never executed
+        1:   68:   CHECK_ERROR((fd = open(fname, O_RDONLY)) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
 call    3 never executed
 call    4 never executed
 branch  5 never executed
 branch  6 never executed
 call    7 never executed
         -:   69:   // Get the file info (for file length)
-    #####:   70:   CHECK_ERROR(fstat(fd, &finfo) < 0);
-call    0 never executed
-branch  1 never executed
-branch  2 never executed
+        1:   70:   CHECK_ERROR(fstat(fd, &finfo) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
 call    3 never executed
 call    4 never executed
 branch  5 never executed
 branch  6 never executed
 call    7 never executed
         -:   71:   // Memory map the file
-    #####:   72:   CHECK_ERROR((fdata = mmap(0, finfo.st_size + 1, 
-call    0 never executed
-branch  1 never executed
-branch  2 never executed
+        1:   72:   CHECK_ERROR((fdata = mmap(0, finfo.st_size + 1, 
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
 call    3 never executed
 call    4 never executed
 branch  5 never executed
@@ -108,80 +108,80 @@ call    7 never executed
         -:   73:      PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == NULL);
         -:   74:
         -:   75:
-    #####:   76:   POINT_T *points = (POINT_T*)fdata;
-    #####:   77:   long long n = (long long) finfo.st_size / sizeof(POINT_T);
-    #####:   78:   long long SX_ll = 0, SY_ll = 0, SXX_ll = 0, SYY_ll = 0, SXY_ll = 0;
+        1:   76:   POINT_T *points = (POINT_T*)fdata;
+        1:   77:   long long n = (long long) finfo.st_size / sizeof(POINT_T);
+        1:   78:   long long SX_ll = 0, SY_ll = 0, SXX_ll = 0, SYY_ll = 0, SXY_ll = 0;
         -:   79:   
         -:   80:   // ADD UP RESULTS
-    #####:   81:   for (i = 0; i < n; i++)
-branch  0 never executed
-branch  1 never executed
+ 28778662:   81:   for (i = 0; i < n; i++)
+branch  0 taken 28778661
+branch  1 taken 1 (fallthrough)
         -:   82:   {
         -:   83:      //Compute SX, SY, SYY, SXX, SXY
-    #####:   84:      SX_ll  += points[i].x;
-    #####:   85:      SXX_ll += points[i].x*points[i].x;
-    #####:   86:      SY_ll  += points[i].y;
-    #####:   87:      SYY_ll += points[i].y*points[i].y;
-    #####:   88:      SXY_ll += points[i].x*points[i].y;
+ 28778661:   84:      SX_ll  += points[i].x;
+ 28778661:   85:      SXX_ll += points[i].x*points[i].x;
+ 28778661:   86:      SY_ll  += points[i].y;
+ 28778661:   87:      SYY_ll += points[i].y*points[i].y;
+ 28778661:   88:      SXY_ll += points[i].x*points[i].y;
         -:   89:   }
         -:   90:
         -:   91:   double a, b, xbar, ybar, r2;
-    #####:   92:   double SX = (double)SX_ll;
-    #####:   93:   double SY = (double)SY_ll;
-    #####:   94:   double SXX= (double)SXX_ll;
-    #####:   95:   double SYY= (double)SYY_ll;
-    #####:   96:   double SXY= (double)SXY_ll;
+        1:   92:   double SX = (double)SX_ll;
+        1:   93:   double SY = (double)SY_ll;
+        1:   94:   double SXX= (double)SXX_ll;
+        1:   95:   double SYY= (double)SYY_ll;
+        1:   96:   double SXY= (double)SXY_ll;
         -:   97:
-    #####:   98:   b = (double)(n*SXY - SX*SY) / (n*SXX - SX*SX);
-    #####:   99:   a = (SY_ll - b*SX_ll) / n;
-    #####:  100:   xbar = (double)SX_ll / n;
-    #####:  101:   ybar = (double)SY_ll / n;
-    #####:  102:   r2 = (double)(n*SXY - SX*SY) * (n*SXY - SX*SY) / ((n*SXX - SX*SX)*(n*SYY - SY*SY));
+        1:   98:   b = (double)(n*SXY - SX*SY) / (n*SXX - SX*SX);
+        1:   99:   a = (SY_ll - b*SX_ll) / n;
+        1:  100:   xbar = (double)SX_ll / n;
+        1:  101:   ybar = (double)SY_ll / n;
+        1:  102:   r2 = (double)(n*SXY - SX*SY) * (n*SXY - SX*SY) / ((n*SXX - SX*SX)*(n*SYY - SY*SY));
         -:  103:
         -:  104:
-    #####:  105:   printf("Linear Regression Serial Results:\n");
-call    0 never executed
-    #####:  106:   printf("\ta    = %lf\n", a);
-call    0 never executed
-    #####:  107:   printf("\tb    = %lf\n", b);
-call    0 never executed
-    #####:  108:   printf("\txbar = %lf\n", xbar);
-call    0 never executed
-    #####:  109:   printf("\tybar = %lf\n", ybar);
-call    0 never executed
-    #####:  110:   printf("\tr2   = %lf\n", r2);
-call    0 never executed
-    #####:  111:   printf("\tSX   = %lld\n", SX_ll);
-call    0 never executed
-    #####:  112:   printf("\tSY   = %lld\n", SY_ll);
-call    0 never executed
-    #####:  113:   printf("\tSXX  = %lld\n", SXX_ll);
-call    0 never executed
-    #####:  114:   printf("\tSYY  = %lld\n", SYY_ll);
-call    0 never executed
-    #####:  115:   printf("\tSXY  = %lld\n", SXY_ll);
-call    0 never executed
+        1:  105:   printf("Linear Regression Serial Results:\n");
+call    0 returned 1
+        1:  106:   printf("\ta    = %lf\n", a);
+call    0 returned 1
+        1:  107:   printf("\tb    = %lf\n", b);
+call    0 returned 1
+        1:  108:   printf("\txbar = %lf\n", xbar);
+call    0 returned 1
+        1:  109:   printf("\tybar = %lf\n", ybar);
+call    0 returned 1
+        1:  110:   printf("\tr2   = %lf\n", r2);
+call    0 returned 1
+        1:  111:   printf("\tSX   = %lld\n", SX_ll);
+call    0 returned 1
+        1:  112:   printf("\tSY   = %lld\n", SY_ll);
+call    0 returned 1
+        1:  113:   printf("\tSXX  = %lld\n", SXX_ll);
+call    0 returned 1
+        1:  114:   printf("\tSYY  = %lld\n", SYY_ll);
+call    0 returned 1
+        1:  115:   printf("\tSXY  = %lld\n", SXY_ll);
+call    0 returned 1
         -:  116:
-    #####:  117:   CHECK_ERROR(munmap(fdata, finfo.st_size + 1) < 0);
-call    0 never executed
-branch  1 never executed
-branch  2 never executed
+        1:  117:   CHECK_ERROR(munmap(fdata, finfo.st_size + 1) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
 call    3 never executed
 call    4 never executed
 branch  5 never executed
 branch  6 never executed
 call    7 never executed
-    #####:  118:   CHECK_ERROR(close(fd) < 0);
-call    0 never executed
-branch  1 never executed
-branch  2 never executed
+        1:  118:   CHECK_ERROR(close(fd) < 0);
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
 call    3 never executed
 call    4 never executed
 branch  5 never executed
 branch  6 never executed
 call    7 never executed
         -:  119:
-    #####:  120:   return 0;
+        1:  120:   return 0;
         -:  121:}
         -:  122:
         -:  123:
