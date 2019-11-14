@@ -1,0 +1,254 @@
+        -:    0:Source:pca-seq.c
+        -:    0:Graph:pca-seq.gcno
+        -:    0:Data:pca-seq.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/* Copyright (c) 2007-2009, Stanford University
+        -:    2:* All rights reserved.
+        -:    3:*
+        -:    4:* Redistribution and use in source and binary forms, with or without
+        -:    5:* modification, are permitted provided that the following conditions are met:
+        -:    6:*     * Redistributions of source code must retain the above copyright
+        -:    7:*       notice, this list of conditions and the following disclaimer.
+        -:    8:*     * Redistributions in binary form must reproduce the above copyright
+        -:    9:*       notice, this list of conditions and the following disclaimer in the
+        -:   10:*       documentation and/or other materials provided with the distribution.
+        -:   11:*     * Neither the name of Stanford University nor the names of its 
+        -:   12:*       contributors may be used to endorse or promote products derived from 
+        -:   13:*       this software without specific prior written permission.
+        -:   14:*
+        -:   15:* THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+        -:   16:* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        -:   17:* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        -:   18:* DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+        -:   19:* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        -:   20:* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        -:   21:* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        -:   22:* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        -:   23:* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        -:   24:* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -:   25:*/ 
+        -:   26:
+        -:   27:#include <stdio.h>
+        -:   28:#include <strings.h>
+        -:   29:#include <string.h>
+        -:   30:#include <stddef.h>
+        -:   31:#include <stdlib.h>
+        -:   32:#include <unistd.h>
+        -:   33:#include <assert.h>
+        -:   34:#include <string.h>
+        -:   35:#include <math.h>
+        -:   36:#include "stddefines.h"
+        -:   37:
+        -:   38:#define DEF_GRID_SIZE 100  // all values in the matrix are from 0 to this value 
+        -:   39:#define DEF_NUM_ROWS 10
+        -:   40:#define DEF_NUM_COLS 10
+        -:   41:
+        -:   42:int num_rows;
+        -:   43:int num_cols;
+        -:   44:int grid_size;
+        -:   45:
+        -:   46:/** parse_args()
+        -:   47: *  Parse the user arguments to determine the number of rows and colums
+        -:   48: */
+function parse_args called 1 returned 100% blocks executed 56%
+        1:   49:void parse_args(int argc, char **argv) 
+        -:   50:{
+        -:   51:   int c;
+        -:   52:   extern char *optarg;
+        -:   53:   extern int optind;
+        -:   54:   
+        1:   55:   num_rows = DEF_NUM_ROWS;
+        1:   56:   num_cols = DEF_NUM_COLS;
+        1:   57:   grid_size = DEF_GRID_SIZE;
+        -:   58:   
+        2:   59:   while ((c = getopt(argc, argv, "r:c:s:")) != EOF) 
+call    0 returned 1
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+        -:   60:   {
+    #####:   61:      switch (c) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+    #####:   62:         case 'r':
+    #####:   63:            num_rows = atoi(optarg);
+    #####:   64:            break;
+    #####:   65:         case 'c':
+    #####:   66:            num_cols = atoi(optarg);
+    #####:   67:            break;
+    #####:   68:         case 's':
+    #####:   69:            grid_size = atoi(optarg);
+    #####:   70:            break;
+    #####:   71:         case '?':
+    #####:   72:            printf("Usage: %s -r <num_rows> -c <num_cols> -s <max value>\n", argv[0]);
+call    0 never executed
+    #####:   73:            exit(1);
+call    0 never executed
+        -:   74:      }
+        -:   75:   }
+        -:   76:   
+        1:   77:   if (num_rows <= 0 || num_cols <= 0 || grid_size <= 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+branch  4 taken 0 (fallthrough)
+branch  5 taken 1
+    #####:   78:      printf("Illegal argument value. All values must be numeric and greater than 0\n");
+call    0 never executed
+    #####:   79:      exit(1);
+call    0 never executed
+        -:   80:   }
+        -:   81:
+        1:   82:   printf("Number of rows = %d\n", num_rows);
+call    0 returned 1
+        1:   83:   printf("Number of cols = %d\n", num_cols);
+call    0 returned 1
+        1:   84:   printf("Max value for each element = %d\n", grid_size);   
+call    0 returned 1
+        1:   85:}
+        -:   86:
+        -:   87:/** dump_points()
+        -:   88: *  Print the values in the matrix to the screen
+        -:   89: */
+function dump_points called 2 returned 100% blocks executed 100%
+        2:   90:void dump_points(int **vals, int rows, int cols)
+        -:   91:{
+        -:   92:   int i, j;
+        -:   93:   
+       22:   94:   for (i = 0; i < rows; i++) 
+branch  0 taken 20
+branch  1 taken 2 (fallthrough)
+        -:   95:   {
+      220:   96:      for (j = 0; j < cols; j++)
+branch  0 taken 200
+branch  1 taken 20 (fallthrough)
+        -:   97:      {
+      200:   98:         dprintf("%5d ",vals[i][j]);
+call    0 returned 200
+        -:   99:      }
+       20:  100:      dprintf("\n");
+call    0 returned 20
+        -:  101:   }
+        2:  102:}
+        -:  103:
+        -:  104:/** generate_points()
+        -:  105: *  Create the values in the matrix
+        -:  106: */
+function generate_points called 1 returned 100% blocks executed 100%
+        1:  107:void generate_points(int **pts, int rows, int cols) 
+        -:  108:{   
+        -:  109:   int i, j;
+        -:  110:   
+       11:  111:   for (i=0; i<rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  112:   {
+      110:  113:      for (j=0; j<cols; j++) 
+branch  0 taken 100
+branch  1 taken 10 (fallthrough)
+        -:  114:      {
+      100:  115:         pts[i][j] = rand() % grid_size;
+call    0 returned 100
+        -:  116:      }
+        -:  117:   }
+        1:  118:}
+        -:  119:
+        -:  120:/** calc_mean()
+        -:  121: *  Compute the mean for each row
+        -:  122: */
+function calc_mean called 1 returned 100% blocks executed 100%
+        1:  123:void calc_mean(int **matrix, int *mean) {
+        -:  124:   int i, j;
+        1:  125:   int sum = 0;
+        -:  126:   
+       11:  127:   for (i = 0; i < num_rows; i++) {
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+       10:  128:      sum = 0;
+      110:  129:      for (j = 0; j < num_cols; j++) {
+branch  0 taken 100
+branch  1 taken 10 (fallthrough)
+      100:  130:         sum += matrix[i][j];
+        -:  131:      }
+       10:  132:      mean[i] = sum / num_cols;   
+        -:  133:   }
+        1:  134:}
+        -:  135:
+        -:  136:/** calc_cov()
+        -:  137: *  Calculate the covariance
+        -:  138: */
+function calc_cov called 1 returned 100% blocks executed 100%
+        1:  139:void calc_cov(int **matrix, int *mean, int **cov) {
+        -:  140:   int i, j, k;
+        -:  141:   int sum;
+        -:  142:   
+       11:  143:   for (i = 0; i < num_rows; i++) {
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+       65:  144:      for (j = i; j < num_rows; j++) {
+branch  0 taken 55
+branch  1 taken 10 (fallthrough)
+       55:  145:         sum = 0;
+      605:  146:         for (k = 0; k < num_cols; k++) {
+branch  0 taken 550
+branch  1 taken 55 (fallthrough)
+      550:  147:            sum = sum + ((matrix[i][k] - mean[i]) * (matrix[j][k] - mean[j]));
+        -:  148:         }
+       55:  149:         cov[i][j] = cov[j][i] = sum/(num_cols-1);
+        -:  150:      }   
+        -:  151:   }   
+        1:  152:}
+        -:  153:
+        -:  154:
+function main called 1 returned 100% blocks executed 100%
+        1:  155:int main(int argc, char **argv) {
+        -:  156:   
+        -:  157:   int i;
+        -:  158:   int **matrix, **cov;
+        -:  159:   int *mean;
+        -:  160:   
+        1:  161:   parse_args(argc, argv);   
+call    0 returned 1
+        -:  162:   
+        -:  163:   // Create the matrix to store the points
+        1:  164:   matrix = (int **)malloc(sizeof(int *) * num_rows);
+       11:  165:   for (i=0; i<num_rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  166:   {
+       10:  167:      matrix[i] = (int *)malloc(sizeof(int) * num_cols);
+        -:  168:   }
+        -:  169:   
+        -:  170:   //Generate random values for all the points in the matrix
+        1:  171:   generate_points(matrix, num_rows, num_cols);
+call    0 returned 1
+        -:  172:   
+        -:  173:   // Print the points
+        1:  174:   dump_points(matrix, num_rows, num_cols);
+call    0 returned 1
+        -:  175:   
+        -:  176:   // Allocate Memory to store the mean and the covariance matrix
+        1:  177:   mean = (int *)malloc(sizeof(int) * num_rows);
+        1:  178:   cov = (int **)malloc(sizeof(int *) * num_rows);
+       11:  179:   for (i=0; i<num_rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  180:   {
+       10:  181:      cov[i] = (int *)malloc(sizeof(int) * num_rows);
+        -:  182:   }
+        -:  183:   
+        -:  184:   // Compute the mean and the covariance
+        1:  185:   calc_mean(matrix, mean);
+call    0 returned 1
+        1:  186:   calc_cov(matrix, mean, cov);
+call    0 returned 1
+        -:  187:   
+        -:  188:   
+        1:  189:   dump_points(cov, num_rows, num_rows);
+call    0 returned 1
+        1:  190:   return 0;
+        -:  191:}

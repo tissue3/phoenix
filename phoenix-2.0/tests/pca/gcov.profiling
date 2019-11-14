@@ -1,0 +1,43 @@
+Function 'main'
+Lines executed:100.00% of 15
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 6
+
+Function 'calc_cov'
+Lines executed:100.00% of 8
+Branches executed:100.00% of 6
+Taken at least once:100.00% of 6
+No calls
+
+Function 'calc_mean'
+Lines executed:100.00% of 8
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+No calls
+
+Function 'generate_points'
+Lines executed:100.00% of 5
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 1
+
+Function 'dump_points'
+Lines executed:100.00% of 6
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 2
+
+Function 'parse_args'
+Lines executed:40.00% of 25
+Branches executed:61.54% of 13
+Taken at least once:30.77% of 13
+Calls executed:50.00% of 8
+
+File 'pca-seq.c'
+Lines executed:77.61% of 67
+Branches executed:85.71% of 35
+Taken at least once:74.29% of 35
+Calls executed:76.47% of 17
+Creating 'pca-seq.c.gcov'
+
