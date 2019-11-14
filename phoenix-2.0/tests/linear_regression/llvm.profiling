@@ -1,0 +1,29 @@
+Linear Regression Serial: Running...
+Linear Regression Serial Results:
+	a    = 54.047281
+	b    = 0.388310
+	xbar = 88.333454
+	ybar = 88.348024
+	r2   = 0.150754
+	SX   = 2542118516
+	SY   = 2542537844
+	SXX  = 267141279222
+	SYY  = 267223889752
+	SXY  = 241128163411
+
+
+llvmInstrAtomicCounter: 2244735757
+basicBlockAtomicCounter: 86335992
+mulAtomicCounter: 86335983
+memOpAtomicCounter: 1093589204
+branchAtomicCounter: 86335991
+main: 1
+printf: 0
+exit: 0
+open: 0
+perror: 0
+__assert_fail: 0
+fstat: 0
+mmap: 0
+munmap: 0
+close: 0
