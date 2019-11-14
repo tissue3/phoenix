@@ -1,0 +1,55 @@
+Function 'main'
+Lines executed:100.00% of 31
+Branches executed:100.00% of 10
+Taken at least once:100.00% of 10
+Calls executed:100.00% of 12
+
+Function 'dump_matrix'
+Lines executed:100.00% of 6
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 2
+
+Function 'calc_means'
+Lines executed:100.00% of 13
+Branches executed:100.00% of 10
+Taken at least once:90.00% of 10
+Calls executed:100.00% of 1
+
+Function 'find_clusters'
+Lines executed:100.00% of 13
+Branches executed:100.00% of 8
+Taken at least once:100.00% of 8
+Calls executed:100.00% of 2
+
+Function 'add_to_sum'
+Lines executed:100.00% of 4
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+
+Function 'get_sq_dist'
+Lines executed:100.00% of 5
+Branches executed:100.00% of 2
+Taken at least once:100.00% of 2
+No calls
+
+Function 'generate_points'
+Lines executed:100.00% of 5
+Branches executed:100.00% of 4
+Taken at least once:100.00% of 4
+Calls executed:100.00% of 1
+
+Function 'parse_args'
+Lines executed:40.00% of 30
+Branches executed:62.50% of 16
+Taken at least once:31.25% of 16
+Calls executed:55.56% of 9
+
+File 'kmeans-seq.c'
+Lines executed:83.18% of 107
+Branches executed:89.29% of 56
+Taken at least once:78.57% of 56
+Calls executed:85.19% of 27
+Creating 'kmeans-seq.c.gcov'
+

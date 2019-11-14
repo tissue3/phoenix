@@ -1,0 +1,384 @@
+        -:    0:Source:kmeans-seq.c
+        -:    0:Graph:kmeans-seq.gcno
+        -:    0:Data:kmeans-seq.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:/* Copyright (c) 2007-2009, Stanford University
+        -:    2:* All rights reserved.
+        -:    3:*
+        -:    4:* Redistribution and use in source and binary forms, with or without
+        -:    5:* modification, are permitted provided that the following conditions are met:
+        -:    6:*     * Redistributions of source code must retain the above copyright
+        -:    7:*       notice, this list of conditions and the following disclaimer.
+        -:    8:*     * Redistributions in binary form must reproduce the above copyright
+        -:    9:*       notice, this list of conditions and the following disclaimer in the
+        -:   10:*        documentation and/or other materials provided with the distribution.
+        -:   11:*     * Neither the name of Stanford University nor the names of its 
+        -:   12:*       contributors may be used to endorse or promote products derived from 
+        -:   13:*       this software without specific prior written permission.
+        -:   14:*
+        -:   15:* THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+        -:   16:* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        -:   17:* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+        -:   18:* DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE FOR ANY
+        -:   19:* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+        -:   20:* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+        -:   21:* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+        -:   22:* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+        -:   23:* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        -:   24:* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -:   25:*/ 
+        -:   26:
+        -:   27:#include <stdio.h>
+        -:   28:#include <assert.h>
+        -:   29:#include <stdlib.h>
+        -:   30:#include <math.h>
+        -:   31:#include <string.h>
+        -:   32:#include <time.h>
+        -:   33:#include <unistd.h>
+        -:   34:
+        -:   35:#include "stddefines.h"
+        -:   36:
+        -:   37:#define DEF_NUM_POINTS 1000
+        -:   38:#define DEF_NUM_MEANS 10
+        -:   39:#define DEF_DIM 3
+        -:   40:#define DEF_GRID_SIZE 100
+        -:   41:
+        -:   42:#define false 0
+        -:   43:#define true 1
+        -:   44:
+        -:   45:int num_points; // number of vectors
+        -:   46:int dim;         // Dimension of each vector
+        -:   47:int num_means; // number of clusters
+        -:   48:int grid_size; // size of each dimension of vector space
+        -:   49:int modified;
+        -:   50:
+        -:   51:/** parse_args()
+        -:   52: *  Parse the user arguments
+        -:   53: */
+function parse_args called 1 returned 100% blocks executed 57%
+        1:   54:void parse_args(int argc, char **argv) 
+        -:   55:{    
+        -:   56:    int c;
+        -:   57:    extern char *optarg;
+        -:   58:    extern int optind;
+        -:   59:    
+        1:   60:    num_points = DEF_NUM_POINTS;
+        1:   61:    num_means = DEF_NUM_MEANS;
+        1:   62:    dim = DEF_DIM;
+        1:   63:    grid_size = DEF_GRID_SIZE;
+        -:   64:    
+        2:   65:    while ((c = getopt(argc, argv, "d:c:p:s:")) != EOF) 
+call    0 returned 1
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+        -:   66:    {
+    #####:   67:        switch (c) {
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+    #####:   68:            case 'd':
+    #####:   69:                dim = atoi(optarg);
+    #####:   70:                break;
+    #####:   71:            case 'c':
+    #####:   72:                num_means = atoi(optarg);
+    #####:   73:                break;
+    #####:   74:            case 'p':
+    #####:   75:                num_points = atoi(optarg);
+    #####:   76:                break;
+    #####:   77:            case 's':
+    #####:   78:                grid_size = atoi(optarg);
+    #####:   79:                break;
+    #####:   80:            case '?':
+    #####:   81:                printf("Usage: %s -d <vector dimension> -c <num clusters> -p <num points> -s <grid size>\n", argv[0]);
+call    0 never executed
+    #####:   82:                exit(1);
+call    0 never executed
+        -:   83:        }
+        -:   84:    }
+        -:   85:    
+        1:   86:    if (dim <= 0 || num_means <= 0 || num_points <= 0 || grid_size <= 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0
+branch  4 taken 1 (fallthrough)
+branch  5 taken 0
+branch  6 taken 0 (fallthrough)
+branch  7 taken 1
+    #####:   87:        printf("Illegal argument value. All values must be numeric and greater than 0\n");
+call    0 never executed
+    #####:   88:        exit(1);
+call    0 never executed
+        -:   89:    }
+        -:   90:    
+        1:   91:    printf("Dimension = %d\n", dim);
+call    0 returned 1
+        1:   92:    printf("Number of clusters = %d\n", num_means);
+call    0 returned 1
+        1:   93:    printf("Number of points = %d\n", num_points);
+call    0 returned 1
+        1:   94:    printf("Size of each dimension = %d\n", grid_size);    
+call    0 returned 1
+        1:   95:}
+        -:   96:
+        -:   97:/** generate_points()
+        -:   98: *  Generate the points
+        -:   99: */
+function generate_points called 2 returned 100% blocks executed 100%
+        2:  100:void generate_points(int **pts, int size) 
+        -:  101:{    
+        -:  102:    int i, j;
+        -:  103:    
+     1012:  104:    for (i=0; i<size; i++) 
+branch  0 taken 1010
+branch  1 taken 2 (fallthrough)
+        -:  105:    {
+     4040:  106:        for (j=0; j<dim; j++) 
+branch  0 taken 3030
+branch  1 taken 1010 (fallthrough)
+        -:  107:        {
+     3030:  108:            pts[i][j] = rand() % grid_size;
+call    0 returned 3030
+        -:  109:        }
+        -:  110:    }
+        2:  111:}
+        -:  112:
+        -:  113:/** get_sq_dist()
+        -:  114: *  Get the squared distance between 2 points
+        -:  115: */
+function get_sq_dist called 230000 returned 100% blocks executed 100%
+   230000:  116:static inline unsigned int get_sq_dist(int *v1, int *v2)
+        -:  117:{
+        -:  118:    int i;
+        -:  119:    
+   230000:  120:    unsigned int sum = 0;
+   920000:  121:    for (i = 0; i < dim; i++) 
+branch  0 taken 690000
+branch  1 taken 230000 (fallthrough)
+        -:  122:    {
+   690000:  123:        sum += ((v1[i] - v2[i]) * (v1[i] - v2[i])); 
+        -:  124:    }
+   230000:  125:    return sum;
+        -:  126:}
+        -:  127:
+        -:  128:/** add_to_sum()
+        -:  129: *	Helper function to update the total distance sum
+        -:  130: */
+function add_to_sum called 23000 returned 100% blocks executed 100%
+    23000:  131:void add_to_sum(int *sum, int *point)
+        -:  132:{
+        -:  133:    int i;
+        -:  134:    
+    92000:  135:    for (i = 0; i < dim; i++)
+branch  0 taken 69000
+branch  1 taken 23000 (fallthrough)
+        -:  136:    {
+    69000:  137:        sum[i] += point[i];    
+        -:  138:    }    
+    23000:  139:}
+        -:  140:
+        -:  141:/** find_clusters()
+        -:  142: *  Find the cluster that is most suitable for a given set of points
+        -:  143: */
+function find_clusters called 23 returned 100% blocks executed 100%
+       23:  144:void find_clusters(int **points, int **means, int *clusters) 
+        -:  145:{
+        -:  146:    int i, j;
+        -:  147:    unsigned int min_dist, cur_dist;
+        -:  148:    int min_idx;
+        -:  149:
+    23023:  150:    for (i = 0; i < num_points; i++) 
+branch  0 taken 23000
+branch  1 taken 23 (fallthrough)
+        -:  151:    {
+    23000:  152:        min_dist = get_sq_dist(points[i], means[0]);
+call    0 returned 23000
+    23000:  153:        min_idx = 0; 
+   230000:  154:        for (j = 1; j < num_means; j++)
+branch  0 taken 207000
+branch  1 taken 23000 (fallthrough)
+        -:  155:        {
+   207000:  156:            cur_dist = get_sq_dist(points[i], means[j]);
+call    0 returned 207000
+   207000:  157:            if (cur_dist < min_dist) 
+branch  0 taken 47200 (fallthrough)
+branch  1 taken 159800
+        -:  158:            {
+    47200:  159:                min_dist = cur_dist;
+    47200:  160:                min_idx = j;    
+        -:  161:            }
+        -:  162:        }
+        -:  163:        
+    23000:  164:        if (clusters[i] != min_idx) 
+branch  0 taken 1787 (fallthrough)
+branch  1 taken 21213
+        -:  165:        {
+     1787:  166:            clusters[i] = min_idx;
+     1787:  167:            modified = true;
+        -:  168:        }
+        -:  169:    }    
+       23:  170:}
+        -:  171:
+        -:  172:/** calc_means()
+        -:  173: *  Compute the means for the various clusters
+        -:  174: */
+function calc_means called 23 returned 100% blocks executed 100%
+       23:  175:void calc_means(int **points, int **means, int *clusters)
+        -:  176:{
+        -:  177:    int i, j, grp_size;
+        -:  178:    int *sum;
+        -:  179:    
+       23:  180:    sum = (int *)malloc(dim * sizeof(int));
+        -:  181:    
+      253:  182:    for (i = 0; i < num_means; i++) 
+branch  0 taken 230
+branch  1 taken 23 (fallthrough)
+        -:  183:    {
+      230:  184:        memset(sum, 0, dim * sizeof(int));
+      230:  185:        grp_size = 0;
+        -:  186:        
+   230230:  187:        for (j = 0; j < num_points; j++)
+branch  0 taken 230000
+branch  1 taken 230 (fallthrough)
+        -:  188:        {
+   230000:  189:            if (clusters[j] == i) 
+branch  0 taken 23000 (fallthrough)
+branch  1 taken 207000
+        -:  190:            {
+    23000:  191:                add_to_sum(sum, points[j]);
+call    0 returned 23000
+    23000:  192:                grp_size++;
+        -:  193:            }    
+        -:  194:        }
+        -:  195:        
+      920:  196:        for (j = 0; j < dim; j++)
+branch  0 taken 690
+branch  1 taken 230 (fallthrough)
+        -:  197:        {
+        -:  198:            //dprintf("div sum = %d, grp size = %d\n", sum[j], grp_size);
+      690:  199:            if (grp_size != 0)
+branch  0 taken 690 (fallthrough)
+branch  1 taken 0
+        -:  200:            { 
+      690:  201:                means[i][j] = sum[j] / grp_size;
+        -:  202:            }
+        -:  203:        }         
+        -:  204:    }
+       23:  205:}
+        -:  206:
+        -:  207:/** dump_matrix()
+        -:  208: *  Helper function to print out the points
+        -:  209: */
+function dump_matrix called 1 returned 100% blocks executed 100%
+        1:  210:void dump_matrix(int **vals, int rows, int cols)
+        -:  211:{
+        -:  212:    int i, j;
+        -:  213:    
+       11:  214:    for (i = 0; i < rows; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  215:    {
+       40:  216:        for (j = 0; j < cols; j++)
+branch  0 taken 30
+branch  1 taken 10 (fallthrough)
+        -:  217:        {
+       30:  218:            dprintf("%5d ",vals[i][j]);
+call    0 returned 30
+        -:  219:        }
+       10:  220:        dprintf("\n");
+call    0 returned 10
+        -:  221:    }
+        1:  222:}
+        -:  223:
+        -:  224:/** 
+        -:  225:* This application groups 'num_points' row-vectors (which are randomly
+        -:  226:* generated) into 'num_means' clusters through an iterative algorithm - the 
+        -:  227:* k-means algorith 
+        -:  228:*/
+function main called 1 returned 100% blocks executed 100%
+        1:  229:int main(int argc, char **argv) 
+        -:  230:{
+        -:  231:
+        -:  232:    int **points;
+        -:  233:    int **means;
+        -:  234:    int *clusters;
+        -:  235:    
+        -:  236:    int i;
+        -:  237:    
+        1:  238:    parse_args(argc, argv);
+call    0 returned 1
+        1:  239:    points = (int **)malloc(sizeof(int *) * num_points);
+     1001:  240:    for (i=0; i<num_points; i++) 
+branch  0 taken 1000
+branch  1 taken 1 (fallthrough)
+        -:  241:    {
+     1000:  242:        points[i] = (int *)malloc(sizeof(int) * dim);
+        -:  243:    }
+        1:  244:    dprintf("Generating points\n");
+call    0 returned 1
+        1:  245:    generate_points(points, num_points);    
+call    0 returned 1
+        -:  246:
+        1:  247:    means = (int **)malloc(sizeof(int *) * num_means);
+       11:  248:    for (i=0; i<num_means; i++) 
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+        -:  249:    {
+       10:  250:        means[i] = (int *)malloc(sizeof(int) * dim);
+        -:  251:    }
+        1:  252:    dprintf("Generating means\n");
+call    0 returned 1
+        1:  253:    generate_points(means, num_means);
+call    0 returned 1
+        -:  254:    
+        1:  255:    clusters = (int *)malloc(sizeof(int) * num_points);
+        1:  256:    memset(clusters, -1, sizeof(int) * num_points);
+        -:  257:    
+        1:  258:    modified = true;
+        -:  259:    
+        -:  260:    
+        -:  261:    
+        1:  262:    dprintf("\n\nStarting iterative algorithm\n");
+call    0 returned 1
+        -:  263:    
+        -:  264:    
+       25:  265:    while (modified) 
+branch  0 taken 23
+branch  1 taken 1 (fallthrough)
+        -:  266:    {
+       23:  267:        modified = false;
+       23:  268:        dprintf(".");
+call    0 returned 23
+        -:  269:        
+       23:  270:        find_clusters(points, means, clusters);
+call    0 returned 23
+       23:  271:        calc_means(points, means, clusters);
+call    0 returned 23
+        -:  272:    }
+        -:  273:    
+        -:  274:    
+        1:  275:    dprintf("\n\nFinal Means:\n");
+call    0 returned 1
+        1:  276:    dump_matrix(means, num_means, dim);
+call    0 returned 1
+        -:  277:    
+        1:  278:    dprintf("Cleaning up\n");
+call    0 returned 1
+       11:  279:    for (i=0; i<num_means; i++) {
+branch  0 taken 10
+branch  1 taken 1 (fallthrough)
+       10:  280:        free(means[i]);
+        -:  281:    }
+        1:  282:    free(means);
+     1001:  283:    for (i=0; i<num_points; i++) {
+branch  0 taken 1000
+branch  1 taken 1 (fallthrough)
+     1000:  284:        free(points[i]);
+        -:  285:    }
+        1:  286:    free(points);
+        1:  287:    return 0;  
+        -:  288:}
